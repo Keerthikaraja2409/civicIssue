@@ -23,20 +23,21 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // 🔹 First try to load a Citizen
         return citizenRepository.findByEmail(email)
                 .map(citizen -> User.builder()
                         .username(citizen.getEmail())
                         .password(citizen.getPassword())
                         .authorities("ROLE_CITIZEN")
                         .build())
-                .orElseGet(() -> 
-                    adminRepository.findByEmail(email)
-                            .map(admin -> User.builder()
-                                    .username(admin.getEmail())
-                                    .password(admin.getPassword())
-                                    .authorities("ROLE_ADMIN")
-                                    .build())
-                            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email))
+                // 🔹 If not found, try to load an Admin
+                .orElseGet(() -> adminRepository.findByEmail(email)
+                        .map(admin -> User.builder()
+                                .username(admin.getEmail())
+                                .password(admin.getPassword())
+                                .authorities("ROLE_ADMIN")
+                                .build())
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email))
                 );
     }
 }
